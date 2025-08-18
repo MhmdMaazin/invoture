@@ -42,9 +42,15 @@ const Charges = () => {
         setShippingType,
         totalInWordsSwitch,
         setTotalInWordsSwitch,
+        showTotalItemsSwitch,
+        setShowTotalItemsSwitch,
+        showTotalItemTypesSwitch,
+        setShowTotalItemTypesSwitch,
         currency,
         subTotal,
         totalAmount,
+        totalItems,
+        totalItemTypes,
     } = useChargesContext();
 
     const switchAmountType = (
@@ -175,6 +181,32 @@ const Charges = () => {
                             checked={totalInWordsSwitch}
                             onCheckedChange={(value) => {
                                 setTotalInWordsSwitch(value);
+                            }}
+                        />
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                        <p>Show Total Items ({totalItems})</p>
+                        <p>
+                            {showTotalItemsSwitch ? "Yes" : "No"}
+                        </p>
+                        <Switch
+                            checked={showTotalItemsSwitch}
+                            onCheckedChange={(value) => {
+                                setShowTotalItemsSwitch(value);
+                            }}
+                        />
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                        <p>Show Total Item Types ({totalItemTypes})</p>
+                        <p>
+                            {showTotalItemTypesSwitch ? "Yes" : "No"}
+                        </p>
+                        <Switch
+                            checked={showTotalItemTypesSwitch}
+                            onCheckedChange={(value) => {
+                                setShowTotalItemTypesSwitch(value);
                             }}
                         />
                     </div>

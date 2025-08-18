@@ -19,23 +19,29 @@ import { InvoiceType, ItemType } from "@/types";
 
 const defaultChargesContext = {
     discountSwitch: false,
-    setDiscountSwitch: (newValue: boolean) => {},
+    setDiscountSwitch: (newValue: boolean) => { },
     taxSwitch: false,
-    setTaxSwitch: (newValue: boolean) => {},
+    setTaxSwitch: (newValue: boolean) => { },
     shippingSwitch: false,
-    setShippingSwitch: (newValue: boolean) => {},
+    setShippingSwitch: (newValue: boolean) => { },
     discountType: "amount",
-    setDiscountType: (newValue: SetStateAction<string>) => {},
+    setDiscountType: (newValue: SetStateAction<string>) => { },
     taxType: "amount",
-    setTaxType: (newValue: SetStateAction<string>) => {},
+    setTaxType: (newValue: SetStateAction<string>) => { },
     shippingType: "amount",
-    setShippingType: (newValue: SetStateAction<string>) => {},
+    setShippingType: (newValue: SetStateAction<string>) => { },
     totalInWordsSwitch: true,
-    setTotalInWordsSwitch: (newValue: boolean) => {},
+    setTotalInWordsSwitch: (newValue: boolean) => { },
+    showTotalItemsSwitch: false,
+    setShowTotalItemsSwitch: (newValue: boolean) => { },
+    showTotalItemTypesSwitch: false,
+    setShowTotalItemTypesSwitch: (newValue: boolean) => { },
     currency: "USD",
     subTotal: 0,
     totalAmount: 0,
-    calculateTotal: () => {},
+    totalItems: 0,
+    totalItemTypes: 0,
+    calculateTotal: () => { },
 };
 
 export const ChargesContext = createContext(defaultChargesContext);
@@ -95,9 +101,15 @@ export const ChargesContextProvider = ({ children }: ChargesContextProps) => {
     // totalInWords ? true : false
     const [totalInWordsSwitch, setTotalInWordsSwitch] = useState<boolean>(true);
 
+    // New toggles for item counts
+    const [showTotalItemsSwitch, setShowTotalItemsSwitch] = useState<boolean>(false);
+    const [showTotalItemTypesSwitch, setShowTotalItemTypesSwitch] = useState<boolean>(false);
+
     // Initial subtotal and total
     const [subTotal, setSubTotal] = useState<number>(0);
     const [totalAmount, setTotalAmount] = useState<number>(0);
+    const [totalItems, setTotalItems] = useState<number>(0);
+    const [totalItemTypes, setTotalItemTypes] = useState<number>(0);
 
     // Types for discount, tax, and shipping. Amount | Percentage
     const [discountType, setDiscountType] = useState("amount");
@@ -158,6 +170,8 @@ export const ChargesContextProvider = ({ children }: ChargesContextProps) => {
     }, [
         itemsArray,
         totalInWordsSwitch,
+        showTotalItemsSwitch,
+        showTotalItemTypesSwitch,
         discountType,
         discount?.amount,
         taxType,
@@ -181,6 +195,13 @@ export const ChargesContextProvider = ({ children }: ChargesContextProps) => {
 
         setValue("details.subTotal", totalSum);
         setSubTotal(totalSum);
+
+        // Calculate item counts
+        const itemCount = itemsArray.reduce((sum: number, item: ItemType) => sum + Number(item.quantity), 0);
+        const itemTypeCount = itemsArray.length;
+
+        setTotalItems(itemCount);
+        setTotalItemTypes(itemTypeCount);
 
         let discountAmount: number =
             parseFloat(discount!.amount.toString()) ?? 0;
@@ -233,12 +254,16 @@ export const ChargesContextProvider = ({ children }: ChargesContextProps) => {
         setValue("details.shippingDetails.costType", shippingCostType);
 
         setValue("details.totalAmount", total);
-        
+
         if (totalInWordsSwitch) {
             setValue("details.totalAmountInWords", formatPriceToString(total, getValues("details.currency")));
         } else {
             setValue("details.totalAmountInWords", "");
         }
+
+        // Set item count toggles
+        setValue("details.showTotalItems", showTotalItemsSwitch);
+        setValue("details.showTotalItemTypes", showTotalItemTypesSwitch);
     };
 
     return (
@@ -258,9 +283,15 @@ export const ChargesContextProvider = ({ children }: ChargesContextProps) => {
                 setShippingType,
                 totalInWordsSwitch,
                 setTotalInWordsSwitch,
+                showTotalItemsSwitch,
+                setShowTotalItemsSwitch,
+                showTotalItemTypesSwitch,
+                setShowTotalItemTypesSwitch,
                 currency,
                 subTotal,
                 totalAmount,
+                totalItems,
+                totalItemTypes,
                 calculateTotal,
             }}
         >

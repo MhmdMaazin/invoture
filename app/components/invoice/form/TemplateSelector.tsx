@@ -19,11 +19,21 @@ import {
     BaseButton,
     InvoiceTemplate1,
     InvoiceTemplate2,
+    InvoiceTemplate3,
+    InvoiceTemplate4,
+    InvoiceTemplate5,
+    InvoiceTemplate6,
+    InvoiceTemplate7,
 } from "@/app/components";
 
 // Template images
 import template1 from "@/public/assets/img/invoice-1-example.png";
 import template2 from "@/public/assets/img/invoice-2-example.png";
+import template3 from "@/public/assets/img/invoice-3-example.png";
+import template4 from "@/public/assets/img/invoice-4-example.png";
+import template5 from "@/public/assets/img/invoice-5-example.png";
+import template6 from "@/public/assets/img/invoice-6-example.png";
+import template7 from "@/public/assets/img/invoice-7-example.png";
 
 // Icons
 import { Check } from "lucide-react";
@@ -48,6 +58,41 @@ const TemplateSelector = () => {
             description: "Second template",
             img: template2,
             component: <InvoiceTemplate2 {...formValues} />,
+        },
+        {
+            id: 3,
+            name: "Template 3",
+            description: "Red sidebar design",
+            img: template3,
+            component: <InvoiceTemplate3 {...formValues} />,
+        },
+        {
+            id: 4,
+            name: "Template 4",
+            description: "Colorful circles design",
+            img: template4,
+            component: <InvoiceTemplate4 {...formValues} />,
+        },
+        {
+            id: 5,
+            name: "Template 5",
+            description: "Geometric red design",
+            img: template5,
+            component: <InvoiceTemplate5 {...formValues} />,
+        },
+        {
+            id: 6,
+            name: "Template 6",
+            description: "Blue corporate design",
+            img: template6,
+            component: <InvoiceTemplate6 {...formValues} />,
+        },
+        {
+            id: 7,
+            name: "Template 7",
+            description: "Minimalist gray design",
+            img: template7,
+            component: <InvoiceTemplate7 {...formValues} />,
         },
     ];
     return (

@@ -159,6 +159,8 @@ const InvoiceDetailsSchema = z.object({
     subTotal: fieldValidators.nonNegativeNumber,
     totalAmount: fieldValidators.nonNegativeNumber,
     totalAmountInWords: fieldValidators.string,
+    showTotalItems: z.boolean().optional(),
+    showTotalItemTypes: z.boolean().optional(),
     additionalNotes: fieldValidators.stringOptional,
     paymentTerms: fieldValidators.stringMin1,
     signature: SignatureSchema.optional(),
