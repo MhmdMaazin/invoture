@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "app/**/route.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "app/**/route.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
+}
+
+
