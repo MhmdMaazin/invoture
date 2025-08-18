@@ -7,7 +7,7 @@ import chromium from "@sparticuz/chromium";
 import { getInvoiceTemplate } from "@/lib/helpers";
 
 // Variables
-import { CHROMIUM_EXECUTABLE_PATH, ENV, TAILWIND_CDN } from "@/lib/variables";
+import { ENV, TAILWIND_CDN } from "@/lib/variables";
 
 // Types
 import { InvoiceType } from "@/types";
@@ -31,12 +31,15 @@ export async function generatePdfService(req: NextRequest) {
 		const InvoiceTemplate = await getInvoiceTemplate(templateId);
 		const htmlTemplate = ReactDOMServer.renderToStaticMarkup(InvoiceTemplate(body));
 
-		if (ENV === "production") {
+		const isLinux = process.platform === "linux";
+		const isProduction = ENV === "production";
+
+		if (isProduction && isLinux) {
 			const puppeteer = await import("puppeteer-core");
 			browser = await puppeteer.launch({
 				args: [...chromium.args, "--disable-dev-shm-usage"],
 				defaultViewport: chromium.defaultViewport,
-				executablePath: await chromium.executablePath(CHROMIUM_EXECUTABLE_PATH),
+				executablePath: await chromium.executablePath(),
 				headless: true,
 				ignoreHTTPSErrors: true,
 			});

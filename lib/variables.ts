@@ -26,11 +26,8 @@ export const EXPORT_INVOICE_API = "/api/invoice/export";
 export const CURRENCIES_API =
     "https://openexchangerates.org/api/currencies.json";
 
-/**
- * Chromium for Puppeteer
- */
-export const CHROMIUM_EXECUTABLE_PATH =
-    "https://github.com/Sparticuz/chromium/releases/download/v122.0.0/chromium-v122.0.0-pack.tar";
+// Chromium for Puppeteer
+// Intentionally let @sparticuz/chromium decide the correct executable path.
 
 /**
  * Tailwind
