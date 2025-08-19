@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "app/api/invoice/generate/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/invoice/export/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/invoice/send/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "build": {
+    "env": {
+      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true"
+    }
+  }
+}
