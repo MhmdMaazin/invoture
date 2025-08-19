@@ -29,55 +29,41 @@ export async function generatePdfService(req: NextRequest) {
 		const ReactDOMServer = (await import("react-dom/server")).default;
 		const templateId = body.details.pdfTemplate;
 		const InvoiceTemplate = await getInvoiceTemplate(templateId);
-		
-		if (!InvoiceTemplate) {
-			throw new Error(`Template ${templateId} not found`);
-		}
-		
 		const htmlTemplate = ReactDOMServer.renderToStaticMarkup(InvoiceTemplate(body));
 
-		// Use puppeteer-core with @sparticuz/chromium for Vercel
-		const puppeteer = await import("puppeteer-core");
-		
-		// Configure browser for Vercel serverless environment
-		browser = await puppeteer.launch({
-			args: [
-				...chromium.args,
-				"--disable-dev-shm-usage",
-				"--disable-gpu",
-				"--disable-software-rasterizer",
-				"--disable-background-timer-throttling",
-				"--disable-backgrounding-occluded-windows",
-				"--disable-renderer-backgrounding",
-				"--disable-features=TranslateUI",
-				"--disable-ipc-flooding-protection",
-			],
-			defaultViewport: chromium.defaultViewport,
-			executablePath: await chromium.executablePath(),
-			headless: true,
-			ignoreHTTPSErrors: true,
-		});
+		const isLinux = process.platform === "linux";
+		const isProduction = ENV === "production";
+
+		if (isProduction && isLinux) {
+			const puppeteer = await import("puppeteer-core");
+			browser = await puppeteer.launch({
+				args: [...chromium.args, "--disable-dev-shm-usage"],
+				defaultViewport: chromium.defaultViewport,
+				executablePath: await chromium.executablePath(),
+				headless: true,
+				ignoreHTTPSErrors: true,
+			});
+		} else {
+			const puppeteer = await import("puppeteer");
+			browser = await puppeteer.launch({
+				args: ["--no-sandbox", "--disable-setuid-sandbox"],
+				headless: "new",
+			});
+		}
 
 		if (!browser) {
 			throw new Error("Failed to launch browser");
 		}
 
 		page = await browser.newPage();
-		
-		// Set content with proper error handling
-		await page.setContent(htmlTemplate, {
-			waitUntil: "domcontentloaded",
+		await page.setContent(await htmlTemplate, {
+			waitUntil: ["networkidle0", "load", "domcontentloaded"],
 			timeout: 30000,
 		});
 
-		// Add Tailwind CSS with error handling
-		try {
-			await page.addStyleTag({
-				url: TAILWIND_CDN,
-			});
-		} catch (styleError) {
-			console.warn("Failed to load external Tailwind CSS, continuing without it:", styleError);
-		}
+		await page.addStyleTag({
+			url: TAILWIND_CDN,
+		});
 
 		const pdf: Buffer = await page.pdf({
 			format: "a4",
@@ -96,11 +82,7 @@ export async function generatePdfService(req: NextRequest) {
 		});
 	} catch (error) {
 		console.error("PDF Generation Error:", error);
-		return new NextResponse(JSON.stringify({ 
-			error: "Failed to generate PDF", 
-			details: error instanceof Error ? error.message : String(error),
-			stack: error instanceof Error ? error.stack : undefined
-		}), {
+		return new NextResponse(JSON.stringify({ error: "Failed to generate PDF", details: error }), {
 			status: 500,
 			headers: {
 				"Content-Type": "application/json",

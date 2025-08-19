@@ -146,16 +146,8 @@ export const InvoiceContextProvider = ({
     try {
       const response = await fetch(GENERATE_PDF_API, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`PDF generation failed: ${response.status} ${response.statusText}. ${errorData.error || ''}`);
-      }
 
       const result = await response.blob();
       setInvoicePdf(result);
@@ -163,12 +155,9 @@ export const InvoiceContextProvider = ({
       if (result.size > 0) {
         // Toast
         pdfGenerationSuccess();
-      } else {
-        throw new Error("Generated PDF is empty");
       }
     } catch (err) {
-      console.error("PDF Generation Error:", err);
-      // You might want to show an error toast here
+      console.log(err);
     } finally {
       setInvoicePdfLoading(false);
     }
