@@ -13,6 +13,34 @@ import { ENV, TAILWIND_CDN } from "@/lib/variables";
 import { InvoiceType } from "@/types";
 
 /**
+ * Optimize invoice data to reduce payload size
+ */
+function optimizeInvoiceData(data: InvoiceType): InvoiceType {
+	const optimized = { ...data };
+	
+	// Remove or compress large base64 images
+	if (optimized.details.invoiceLogo && optimized.details.invoiceLogo.startsWith('data:image')) {
+		const logoSize = Buffer.byteLength(optimized.details.invoiceLogo, 'utf8');
+		if (logoSize > 50000) { // 50KB limit for logo
+			console.log(`Removing large logo (${logoSize} bytes)`);
+			optimized.details.invoiceLogo = '';
+		}
+	}
+	
+	// Truncate very long text fields
+	if (optimized.details.additionalNotes && optimized.details.additionalNotes.length > 1000) {
+		optimized.details.additionalNotes = optimized.details.additionalNotes.substring(0, 1000) + '...';
+	}
+	
+	// Limit items array size
+	if (optimized.details.items && optimized.details.items.length > 50) {
+		optimized.details.items = optimized.details.items.slice(0, 50);
+	}
+	
+	return optimized;
+}
+
+/**
  * Fallback PDF generation method for Vercel environment
  */
 async function generatePdfFallback(htmlTemplate: string): Promise<Buffer> {
@@ -61,44 +89,119 @@ async function generatePdfFallback(htmlTemplate: string): Promise<Buffer> {
 }
 
 /**
- * Alternative PDF generation using cloud service (as last resort)
+ * Optimize HTML template to reduce size
  */
-async function generatePdfCloudService(htmlTemplate: string): Promise<Buffer> {
+function optimizeHtmlTemplate(html: string): string {
+	// Remove unnecessary whitespace and comments
+	return html
+		.replace(/\s+/g, ' ')
+		.replace(/<!--[\s\S]*?-->/g, '')
+		.replace(/>\s+</g, '><')
+		.trim();
+}
+
+/**
+ * Alternative PDF generation using a more robust approach
+ */
+async function generatePdfAlternative(htmlTemplate: string): Promise<Buffer> {
 	try {
-		// You can replace this with any cloud PDF service like:
-		// - Puppeteer Cloud
-		// - Browserless.io
-		// - Chrome AWS Lambda
-		// - Or any other service
-		
-		const response = await fetch('https://api.browserless.io/pdf', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Cache-Control': 'no-cache',
-			},
-			body: JSON.stringify({
-				html: htmlTemplate,
-				options: {
-					format: 'A4',
-					printBackground: true,
-					margin: {
-						top: '20px',
-						right: '20px',
-						bottom: '20px',
-						left: '20px'
+		// Use a different approach - create a minimal HTML with external CSS
+		const minimalHtml = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<meta charset="utf-8">
+				<title>Invoice</title>
+				<style>
+					body { 
+						font-family: Arial, sans-serif; 
+						margin: 20px; 
+						font-size: 12px;
+						line-height: 1.4;
 					}
-				}
-			})
+					table { 
+						width: 100%; 
+						border-collapse: collapse; 
+						margin-bottom: 20px;
+					}
+					th, td { 
+						border: 1px solid #ddd; 
+						padding: 8px; 
+						text-align: left; 
+					}
+					th { 
+						background-color: #f2f2f2; 
+						font-weight: bold;
+					}
+					.header { 
+						text-align: center; 
+						margin-bottom: 30px; 
+						border-bottom: 2px solid #333;
+						padding-bottom: 10px;
+					}
+					.section { 
+						margin-bottom: 20px; 
+					}
+					.total { 
+						font-weight: bold; 
+						font-size: 14px; 
+						border-top: 2px solid #333;
+						padding-top: 10px;
+					}
+				</style>
+			</head>
+			<body>
+				${htmlTemplate}
+			</body>
+			</html>
+		`;
+
+		// Try with a different cloud service or use a simpler approach
+		const puppeteer = await import("puppeteer-core");
+		
+		const browser = await puppeteer.launch({
+			args: [
+				"--no-sandbox",
+				"--disable-setuid-sandbox",
+				"--disable-dev-shm-usage",
+				"--disable-gpu",
+				"--disable-web-security",
+				"--disable-features=VizDisplayCompositor",
+				"--disable-extensions",
+				"--disable-plugins",
+				"--disable-images",
+				"--disable-javascript"
+			],
+			executablePath: await chromium.executablePath(),
+			headless: true,
 		});
 
-		if (!response.ok) {
-			throw new Error(`Cloud service failed: ${response.statusText}`);
-		}
+		const page = await browser.newPage();
+		
+		// Set a smaller viewport to reduce memory usage
+		await page.setViewport({ width: 800, height: 600 });
+		
+		await page.setContent(minimalHtml, { 
+			waitUntil: "domcontentloaded",
+			timeout: 15000 
+		});
 
-		return Buffer.from(await response.arrayBuffer());
+		const pdf = await page.pdf({
+			format: "a4",
+			printBackground: true,
+			preferCSSPageSize: true,
+			margin: {
+				top: '20px',
+				right: '20px',
+				bottom: '20px',
+				left: '20px'
+			}
+		});
+
+		await browser.close();
+		return pdf;
 	} catch (error) {
-		console.error("Cloud PDF generation failed:", error);
+		console.error("Alternative PDF generation failed:", error);
 		throw error;
 	}
 }
@@ -115,12 +218,35 @@ export async function generatePdfService(req: NextRequest) {
 	const body: InvoiceType = await req.json();
 	let browser;
 	let page;
+	let pdf: Buffer;
 
 	try {
-		const ReactDOMServer = (await import("react-dom/server")).default;
-		const templateId = body.details.pdfTemplate;
-		const InvoiceTemplate = await getInvoiceTemplate(templateId);
-		const htmlTemplate = ReactDOMServer.renderToStaticMarkup(InvoiceTemplate(body));
+			const ReactDOMServer = (await import("react-dom/server")).default;
+			const templateId = body.details.pdfTemplate;
+			const InvoiceTemplate = await getInvoiceTemplate(templateId);
+			
+			// Optimize the data to reduce payload size
+			const optimizedBody = optimizeInvoiceData(body);
+			
+			const htmlTemplate = optimizeHtmlTemplate(ReactDOMServer.renderToStaticMarkup(InvoiceTemplate(optimizedBody)));
+
+			// Check HTML size to prevent extremely large payloads
+			const htmlSize = Buffer.byteLength(htmlTemplate, 'utf8');
+			console.log(`HTML template size: ${htmlSize} bytes`);
+			
+			if (htmlSize > 500000) { // 500KB limit
+				console.warn(`HTML template is very large (${htmlSize} bytes), using alternative method`);
+				const largePdf = await generatePdfAlternative(htmlTemplate);
+				return new NextResponse(new Blob([new Uint8Array(largePdf)], { type: "application/pdf" }), {
+					headers: {
+						"Content-Type": "application/pdf",
+						"Content-Disposition": "attachment; filename=invoice.pdf",
+						"Cache-Control": "no-cache",
+						Pragma: "no-cache",
+					},
+					status: 200,
+				});
+			}
 
 		// Check if we're in Vercel environment
 		const isVercel = process.env.VERCEL === "1";
@@ -128,7 +254,7 @@ export async function generatePdfService(req: NextRequest) {
 		const isProduction = ENV === "production";
 
 		let pdf: Buffer;
-
+		
 		try {
 			if (isVercel || (isProduction && isLinux)) {
 				// Use @sparticuz/chromium for Vercel
@@ -185,10 +311,14 @@ export async function generatePdfService(req: NextRequest) {
 				// Try fallback method
 				pdf = await generatePdfFallback(htmlTemplate);
 			} catch (fallbackError) {
-				console.error("Fallback PDF generation failed, trying cloud service:", fallbackError);
-				// Try cloud service as last resort
-				pdf = await generatePdfCloudService(htmlTemplate);
+				console.error("Fallback PDF generation failed, trying alternative method:", fallbackError);
+				// Try alternative method as last resort
+				pdf = await generatePdfAlternative(htmlTemplate);
 			}
+		}
+
+		if (!pdf) {
+			throw new Error("Failed to generate PDF with all methods");
 		}
 
 		return new NextResponse(new Blob([new Uint8Array(pdf)], { type: "application/pdf" }), {
