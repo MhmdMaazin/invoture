@@ -1,9 +1,15 @@
 import { NextRequest } from "next/server";
-
-// Services
 import { generatePdfService } from "@/services/invoice/server/generatePdfService";
 
 export async function POST(req: NextRequest) {
-    const result = await generatePdfService(req);
-    return result;
+  try {
+    const pdfResponse = await generatePdfService(req);
+    return pdfResponse;
+  } catch (error: any) {
+    console.error("API Route Error:", error);
+    return new Response(JSON.stringify({ error: error.message || "Failed to generate PDF" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
