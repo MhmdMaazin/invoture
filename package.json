@@ -61,11 +61,11 @@
         "xlsx": "^0.18.5",
         "xml2js": "^0.6.2",
         "zod": "^3.22.2",
-        "sparticuz/chromium": "122.0.0"
+        "@sparticuz/chromium": "^122.0.0"
     },
     "devDependencies": {
         "@next/bundle-analyzer": "^14.0.4",
-        "@sparticuz/chromium": "122.0.0",
+        "@sparticuz/chromium": "^122.0.0",
         "@types/nodemailer": "^6.4.14",
         "@types/number-to-words": "^1.2.1",
         "@types/react": "^18.2.22",
