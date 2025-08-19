@@ -17,7 +17,7 @@ const BaseFooter = () => {
                     target="_blank"
                     style={{ textDecoration: "underline" }}
                 >
-                    Ali Abbasov
+                    Maazin
                 </a>
             </p>
         </footer>

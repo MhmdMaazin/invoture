@@ -5,13 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 
 // Assets
-import Logo from "@/public/assets/img/invoture-logo.png";
+import Logo from "@/public/assets/img/invoture_logo.png";
 
 // ShadCn
 import { Card } from "@/components/ui/card";
 
 // Components
-import { DevDebug, LanguageSelector, ThemeSwitcher } from "@/app/components";
+import { DevDebug, LanguageSelector, ThemeSwitcher, TemplateQuickLinks } from "@/app/components";
 
 const BaseNavbar = () => {
     const devEnv = useMemo(() => {
@@ -29,8 +29,11 @@ const BaseNavbar = () => {
                             width={190}
                             height={100}
                             loading="eager"
+                            className="dark:invert"
                         />
                     </Link>
+                    {/* Templates quick links */}
+                    <TemplateQuickLinks />
                     {/* ? DEV Only */}
                     {devEnv && <DevDebug />}
                     <LanguageSelector />
