@@ -49,7 +49,7 @@ export async function sendPdfToEmailService(
 
     try {
         const mailOptions: SendMailOptions = {
-            from: "Invoify",
+            from: "Invoture",
             to: email,
             subject: `Invoice Ready: #${invoiceNumber}`,
             html: emailHTML,

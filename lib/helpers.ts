@@ -182,8 +182,17 @@ const getInvoiceTemplate = async (templateId: number) => {
     } catch (err) {
         console.error(`Error importing template ${componentName}: ${err}`);
 
-        // Provide a default template
-        return null;
+        // Try to import the first template as fallback
+        try {
+            const fallbackModule = await import(
+                `@/app/components/templates/invoice-pdf/InvoiceTemplate1`
+            );
+            console.warn(`Using fallback template for template ${templateId}`);
+            return fallbackModule.default;
+        } catch (fallbackErr) {
+            console.error(`Error importing fallback template: ${fallbackErr}`);
+            return null;
+        }
     }
 };
 

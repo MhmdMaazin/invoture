@@ -34,12 +34,12 @@ export default function SendPdfEmail({ invoiceNumber }: SendPdfEmailProps) {
                         <Section className="bg-white border-black-950 my-10 px-10 py-4 rounded-md">
                             <Img
                                 src={logo}
-                                alt="Invoify Logo"
+                                alt="Invoture Logo"
                                 width={200}
                                 height={120}
                             />
                             <Heading className="leading-tight">
-                                Thanks for using Invoify!
+                                Thanks for using Invoture!
                             </Heading>
 
                             <Text>
@@ -53,7 +53,7 @@ export default function SendPdfEmail({ invoiceNumber }: SendPdfEmailProps) {
                             <Text>
                                 Best Regards,
                                 <br />
-                                Invoify Team
+                                Invoture Team
                             </Text>
                         </Section>
                     </Container>
