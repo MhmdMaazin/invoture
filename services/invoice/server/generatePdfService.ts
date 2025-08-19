@@ -37,11 +37,11 @@ export async function generatePdfService(req: NextRequest) {
 		if (isProduction && isLinux) {
 			const puppeteer = await import("puppeteer-core");
 			browser = await puppeteer.launch({
-				args: [...chromium.args, "--disable-dev-shm-usage"],
-				defaultViewport: chromium.defaultViewport,
-				executablePath: await chromium.executablePath(),
-				headless: true,
-				ignoreHTTPSErrors: true,
+			  args: [...chromium.args, "--disable-dev-shm-usage"],
+			  defaultViewport: chromium.defaultViewport,
+			  executablePath: (await chromium.executablePath()) || "/usr/bin/chromium",
+			  headless: true as const,
+			  ignoreHTTPSErrors: true,
 			});
 		} else {
 			const puppeteer = await import("puppeteer");
